@@ -51,7 +51,40 @@ LEFT JOIN drug AS dg
 USING (drug_name)
 GROUP BY dg.generic_name
 ORDER BY total_cost_per_day DESC;
--- 4. For each drug in the drug table, return the drug name and then a column named
+-- 4a. For each drug in the drug table, return the drug name and then a column named
 -- 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says
 -- 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither'
 -- for all other drugs. Hint: You may want to use a CASE expression for this. 
+
+-- 4b. Building off of the query you wrote for part a, determine whether more was spent
+-- (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY
+-- for easier comparision.
+
+-- 5a. How many CBSAs are in Tennessee?
+-- 5b. Which cbsa has the largest combined population? Which has the smallest?
+-- Report the CBSA name and total population.
+-- 5c. What is the largest (in terms of population) county which is not included in a CBSA?
+-- Report the county name and population.
+
+-- 6a. Find all rows in the prescription table where total_claims is at least 3000.
+-- Report the drug_name and the total_claim_count.
+-- 6b. For each instance that you found in part a, add a column that indicates whether
+-- the drug is an opioid.
+-- 6c. Add another column to you answer from the previous part which gives the prescriber first
+-- and last name associated with each row.
+
+-- 7. The goal of this exercise is to generate a full list of all pain management specialists in
+-- Nashville and the number of claims they had for each opioid. Hint: The results from all 3
+-- parts will have 637 rows.
+
+-- 7a. First, create a list of all npi/drug_name combinations for pain management specialists
+-- (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'),
+--  where the drug is an opioid (opiod_drug_flag = 'Y'). Warning: Double-check your query before running it.
+--  You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+
+-- 7b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations,
+-- whether or not the prescriber had any claims. You should report the npi,
+-- the drug name, and the number of claims (total_claim_count).
+
+-- 7c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0.
+-- Hint - Google the COALESCE function.
