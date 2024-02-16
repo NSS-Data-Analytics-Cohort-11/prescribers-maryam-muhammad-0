@@ -55,27 +55,75 @@ ORDER BY total_cost_per_day DESC;
 -- 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says
 -- 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither'
 -- for all other drugs. Hint: You may want to use a CASE expression for this. 
-
+SELECT drug_name,
+CASE
+	WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+	WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+	ELSE 'neither'
+END AS drug_type
+FROM drug;
 -- 4b. Building off of the query you wrote for part a, determine whether more was spent
 -- (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY
 -- for easier comparision.
+SELECT
+CASE
+	WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+	WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+	ELSE 'neither'
+END AS drug_type, SUM(pr.total_drug_cost) AS money
+FROM drug
+LEFT JOIN prescription AS pr
+USING (drug_name)
+GROUP BY drug_type
+ORDER BY money DESC;
 
 -- 5a. How many CBSAs are in Tennessee?
--- 5b. Which cbsa has the largest combined population? Which has the smallest?
+SELECT COUNT(cbsaname)
+FROM cbsa
+WHERE cbsaname LIKE '%TN';
+-- 5b. Which cbsa has the largest combined population? Which has the smallest? (Largest: Nashville-Davidson-Murfeesboro-Franklin, Smallest: Morristown, TN)
 -- Report the CBSA name and total population.
--- 5c. What is the largest (in terms of population) county which is not included in a CBSA?
+SELECT cb.cbsaname, SUM(pop.population)
+FROM cbsa AS cb
+INNER JOIN population AS pop
+USING (fipscounty)
+GROUP BY cb.cbsaname
+ORDER BY SUM(pop.population) desc;
+-- 5c. What is the largest (in terms of population) county which is not included in a CBSA? (Sevier)
 -- Report the county name and population.
-
+SELECT fips.county, SUM(pop.population)
+FROM fips_county AS fips
+INNER JOIN population AS pop
+USING (fipscounty)
+	WHERE fips.fipscounty NOT IN
+	(SELECT fipscounty
+	FROM cbsa)
+GROUP BY fips.county
+ORDER BY SUM(pop.population) DESC;
 -- 6a. Find all rows in the prescription table where total_claims is at least 3000.
 -- Report the drug_name and the total_claim_count.
+SELECT drug_name, total_claim_count
+FROM prescription
+WHERE total_claim_count >= 3000;
 -- 6b. For each instance that you found in part a, add a column that indicates whether
 -- the drug is an opioid.
+SELECT drug_name, total_claim_count, opioid_drug_flag
+FROM prescription
+INNER JOIN drug
+USING (drug_name)
+WHERE total_claim_count >= 3000;
 -- 6c. Add another column to you answer from the previous part which gives the prescriber first
 -- and last name associated with each row.
-
+SELECT dg.drug_name, pn.total_claim_count, dg.opioid_drug_flag,pr.nppes_provider_first_name,pr.nppes_provider_last_org_name
+FROM prescription AS pn
+INNER JOIN drug AS dg
+USING (drug_name)
+INNER JOIN prescriber AS pr
+USING (npi)
+WHERE pn.total_claim_count >= 3000;
 -- 7. The goal of this exercise is to generate a full list of all pain management specialists in
 -- Nashville and the number of claims they had for each opioid. Hint: The results from all 3
--- parts will have 637 rows.
+-- parts will have 637 rows. [cross join]
 
 -- 7a. First, create a list of all npi/drug_name combinations for pain management specialists
 -- (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'),
