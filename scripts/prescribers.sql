@@ -32,13 +32,13 @@ ORDER BY COUNT(pn.total_claim_count) DESC;
 -- 2c. Challenge Question: Are there any specialties that appear in the prescriber table
 -- that have no associated prescriptions in the prescription table
 
-SELECT DISTINCT pr.specialty_description
+-- SELECT DISTINCT pr.specialty_description
 FROM prescriber AS pr
 LEFT JOIN prescription AS pn
 USING (npi)
 WHERE drug_name IS NULL;
 
-SELECT DISTINCT pr.specialty_description
+-- SELECT DISTINCT pr.specialty_description
 FROM prescriber AS pr
 	WHERE pr.npi NOT IN
 	(SELECT DISTINCT pn.npi
@@ -52,6 +52,24 @@ FROM prescriber AS pr
 	INNER JOIN prescriber
 	USING (npi));
 
+-- d. Difficult Bonus: Do not attempt until you have solved all other problems!
+-- For each specialty, report the percentage of total claims by that specialty which are for opioids.
+-- Which specialties have a high percentage of opioids?
+
+SELECT pr.specialty_description, 
+	(SELECT SUM(pn.total_claim_count)
+	FROM prescription AS pn
+	INNER JOIN drug AS dg
+	USING (drug_name)
+	WHERE dg.opioid_drug_flag = 'Y')/SUM(pn.total_claim_count) AS sum_op
+FROM prescriber AS pr
+INNER JOIN prescription AS pn
+	USING (npi)
+GROUP BY pr.specialty_description
+ORDER BY pr.specialty_description DESC;
+
+-- sum(case statement, opiod claims, opiod total, opioid perc)
+-- 
 
 -- 3a. Which drug (generic_name) had the highest total drug cost?
 SELECT dg.generic_name, SUM(pn.total_drug_cost)
