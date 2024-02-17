@@ -31,11 +31,28 @@ GROUP BY pr.specialty_description
 ORDER BY COUNT(pn.total_claim_count) DESC;
 -- 2c. Challenge Question: Are there any specialties that appear in the prescriber table
 -- that have no associated prescriptions in the prescription table
--- SELECT pr.npi, pr.specialty_description
--- FROM prescriber AS pr
--- WHERE pr.npi NOT IN
--- 	(SELECT pn.npi
--- 	FROM prescription AS pn);
+
+SELECT DISTINCT pr.specialty_description
+FROM prescriber AS pr
+LEFT JOIN prescription AS pn
+USING (npi)
+WHERE drug_name IS NULL;
+
+SELECT DISTINCT pr.specialty_description
+FROM prescriber AS pr
+	WHERE pr.npi NOT IN
+	(SELECT DISTINCT pn.npi
+	FROM prescription AS pn);
+	
+SELECT DISTINCT pr.specialty_description
+FROM prescriber AS pr
+	WHERE pr.specialty_description NOT IN
+	(SELECT DISTINCT specialty_description
+	FROM prescription AS pn
+	INNER JOIN prescriber
+	USING (npi));
+
+
 -- 3a. Which drug (generic_name) had the highest total drug cost?
 SELECT dg.generic_name, SUM(pn.total_drug_cost)
 FROM prescription AS pn
@@ -128,11 +145,31 @@ WHERE pn.total_claim_count >= 3000;
 -- 7a. First, create a list of all npi/drug_name combinations for pain management specialists
 -- (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'),
 --  where the drug is an opioid (opiod_drug_flag = 'Y'). Warning: Double-check your query before running it.
---  You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+--  You will only need to use the prescriber and drug tables since you don't need the claims numbers yet. 
+
+SELECT pr.npi, dg.drug_name
+FROM prescriber AS pr
+CROSS JOIN drug AS dg
+WHERE specialty_description iLIKE 'Pain Management' AND nppes_provider_city iLIKE 'NASHVILLE' AND dg.opioid_drug_flag = 'Y';
 
 -- 7b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations,
 -- whether or not the prescriber had any claims. You should report the npi,
--- the drug name, and the number of claims (total_claim_count).
+-- the drug name, and the number of claims (total_claim_count). [use same filters as above, XJ and LJ]
+
+SELECT pr.npi, dg.drug_name, pn.total_claim_count
+FROM prescriber AS pr
+CROSS JOIN drug AS dg
+LEFT JOIN prescription AS pn
+USING (npi, drug_name) 
+WHERE specialty_description iLIKE 'Pain Management' AND nppes_provider_city iLIKE 'NASHVILLE' AND dg.opioid_drug_flag = 'Y'
+ORDER BY pr.npi ASC;
 
 -- 7c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0.
 -- Hint - Google the COALESCE function.
+
+SELECT pr.npi, dg.drug_name, COALESCE(pn.total_claim_count,'0')
+FROM prescriber AS pr
+CROSS JOIN drug AS dg
+LEFT JOIN prescription AS pn
+USING (npi, drug_name) 
+WHERE specialty_description = 'Pain Management' AND nppes_provider_city = 'NASHVILLE' AND dg.opioid_drug_flag = 'Y';
